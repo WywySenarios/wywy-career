@@ -1,0 +1,127 @@
+---
+import { getCollection } from "astro:content";
+import ContactDetails from "@/components/ContactDetails.astro";
+import EntryList from "@/components/EntryList.astro";
+import SkillGroups from "@/components/SkillGroups.astro";
+import StreamSection from "@/components/StreamSection.astro";
+import StreamSwitcher from "@/components/StreamSwitcher";
+import SummaryVariants from "@/components/SummaryVariants.astro";
+import Layout from "@/layouts/Layout.astro";
+import {
+  educationToEntries,
+  experienceToEntries,
+  projectsToEntries,
+  summariesToVariants,
+} from "@/lib/cv-entries";
+import { sortSkillGroups } from "@/lib/skills";
+import {
+  assertKnownStreams,
+  buildLookup,
+  defaultStreamId,
+  sortCatalogByOrder,
+} from "@/lib/streams";
+
+export const prerender = true;
+
+const [
+  skillEntries,
+  contactEntries,
+  summaryEntries,
+  experienceEntries,
+  projectEntries,
+  educationEntries,
+  streamEntries,
+] = await Promise.all([
+  getCollection("skills"),
+  getCollection("contact"),
+  getCollection("summaryVariants"),
+  getCollection("experience"),
+  getCollection("projects"),
+  getCollection("education"),
+  getCollection("streams"),
+]);
+
+const catalog = streamEntries.map((entry) => entry.data);
+const summaryRecords = summaryEntries.map((entry) => entry.data);
+const experienceRecords = experienceEntries.map((entry) => entry.data);
+const projectRecords = projectEntries.map((entry) => entry.data);
+const educationRecords = educationEntries.map((entry) => entry.data);
+
+assertKnownStreams(
+  [
+    ...summaryRecords,
+    ...experienceRecords,
+    ...projectRecords,
+    ...educationRecords,
+  ],
+  catalog,
+);
+
+const lookup = buildLookup(catalog);
+const orderedCatalog = sortCatalogByOrder(catalog);
+const initialStreamId = defaultStreamId(orderedCatalog);
+
+const skillGroups = sortSkillGroups(skillEntries).map((entry) => entry.data);
+const contact = contactEntries[0]?.data;
+const summaries = summariesToVariants(summaryRecords, lookup);
+const experience = experienceToEntries(experienceRecords, lookup);
+const projects = projectsToEntries(projectRecords, lookup);
+const education = educationToEntries(educationRecords, lookup);
+---
+
+<Layout title={contact?.name ?? "CV"}>
+  <main class="mx-auto max-w-2xl space-y-6 px-6 py-12">
+    {contact && (
+      <ContactDetails
+        name={contact.name}
+        phone={contact.phone}
+        email={contact.email}
+        links={contact.links}
+      />
+    )}
+
+    <StreamSwitcher
+      streams={orderedCatalog.map(({ id, label }) => ({
+        id,
+        label,
+      }))}
+      defaultId={initialStreamId}
+      client:load
+    />
+
+    <StreamSection
+      heading="Summary"
+      atoms={summaries}
+      activeStream={initialStreamId}
+    >
+      <SummaryVariants variants={summaries} activeStream={initialStreamId} />
+    </StreamSection>
+
+    <StreamSection
+      heading="Experience"
+      atoms={experience}
+      activeStream={initialStreamId}
+    >
+      <EntryList entries={experience} activeStream={initialStreamId} />
+    </StreamSection>
+
+    <StreamSection
+      heading="Projects"
+      atoms={projects}
+      activeStream={initialStreamId}
+    >
+      <EntryList entries={projects} activeStream={initialStreamId} />
+    </StreamSection>
+
+    <StreamSection
+      heading="Education"
+      atoms={education}
+      activeStream={initialStreamId}
+    >
+      <EntryList entries={education} activeStream={initialStreamId} />
+    </StreamSection>
+
+    <h2 class="text-xl font-semibold text-foreground">Skills</h2>
+    <SkillGroups groups={skillGroups} />
+  </main>
+</Layout>

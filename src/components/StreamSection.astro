@@ -1,0 +1,20 @@
+---
+import { hasVisibleAtom } from "@/lib/stream-predicates";
+
+interface Props {
+  heading: string;
+  atoms: readonly { streams: string[] }[];
+  activeStream: string;
+}
+
+const { heading, atoms, activeStream } = Astro.props;
+const hidden = hasVisibleAtom(
+  atoms.map((atom) => atom.streams),
+  activeStream,
+);
+---
+
+<div data-stream-section hidden={hidden ? undefined : true}>
+  <h2 class="text-xl font-semibold text-foreground">{heading}</h2>
+  <slot />
+</div>

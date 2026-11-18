@@ -1,0 +1,3 @@
+[submodule "src/data/cv"]
+	path = src/data/cv
+	url = https://github.com/WywySenarios/cv-data

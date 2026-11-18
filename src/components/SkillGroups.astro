@@ -1,0 +1,21 @@
+---
+import { formatSkillItems } from "@/lib/skills";
+import type { SkillGroup } from "@/lib/skills-schema";
+
+interface Props {
+  groups: Pick<SkillGroup, "id" | "label" | "items">[];
+}
+
+const { groups } = Astro.props;
+---
+
+{
+  groups.map((group) => (
+    <section class="space-y-1">
+      <h2 class="text-lg font-semibold text-foreground">{group.label}</h2>
+      <p class="text-sm text-muted-foreground">
+        {formatSkillItems(group.items)}
+      </p>
+    </section>
+  ))
+}

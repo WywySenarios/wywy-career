@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.astro/
+
+# Editor and OS
+.DS_Store
+.vscode/
+
+# Tool caches
+.eslintcache
+*.tsbuildinfo
+.ruff_cache/

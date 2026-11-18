@@ -1,0 +1,46 @@
+---
+import type { CvEntry } from "@/lib/cv-entries";
+import { isVisible } from "@/lib/stream-predicates";
+
+interface Props {
+  entries: CvEntry[];
+  activeStream: string;
+}
+
+const { entries, activeStream } = Astro.props;
+---
+
+{
+  entries.map((entry) => (
+    <section
+      id={entry.id}
+      class="space-y-1"
+      data-streams={entry.streams.join(",")}
+      data-stream-atom
+      hidden={!isVisible(entry.streams, activeStream)}
+    >
+      <h3 class="text-base font-semibold text-foreground">{entry.title}</h3>
+      {entry.subtitle && (
+        <p class="text-sm text-foreground">{entry.subtitle}</p>
+      )}
+      {entry.meta && (
+        <p class="text-sm text-muted-foreground">{entry.meta}</p>
+      )}
+      {entry.tags?.length ? (
+        <p class="text-sm text-muted-foreground">{entry.tags.join(", ")}</p>
+      ) : null}
+      {entry.bullets.length > 0 && (
+        <ul class="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          {entry.bullets.map((bullet) => (
+            <li
+              data-streams={bullet.streams.join(",")}
+              hidden={!isVisible(bullet.streams, activeStream)}
+            >
+              {bullet.text}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  ))
+}

@@ -1,9 +1,13 @@
 export const CARD_SKILL_GROUP_IDS = [
   "languages",
-  "tools",
+  "systems-tools",
+  "ops-tools",
   "frameworks",
   "cloud",
+  "observability",
+  "cicd",
   "deployment",
+  "databases",
 ] as const;
 
 export const PROSE_SKILL_GROUP_IDS = ["values"] as const;

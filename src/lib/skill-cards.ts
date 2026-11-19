@@ -63,6 +63,9 @@ export const TEXT_ONLY_SKILLS: ReadonlySet<string> = new Set([
   "Docker Compose",
   "systemd",
   "Cloudflare Tunnel",
+  "Ansible",
+  "Terraform",
+  "Jenkins",
 ]);
 
 function isDeclaredSkill(name: string): boolean {

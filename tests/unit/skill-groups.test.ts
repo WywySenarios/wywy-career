@@ -1,7 +1,30 @@
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import SkillGroups from "@/components/SkillGroups.astro";
+import { CARD_SKILL_GROUP_IDS, PROSE_SKILL_GROUP_IDS } from "@/lib/skills";
 import type { SkillGroup } from "@/lib/skills-schema";
+
+const {
+  MAPPED_ITEM,
+  SECOND_MAPPED_ITEM,
+  TEXT_ONLY_ITEM,
+  MAPPED_ICON_URL,
+  SECOND_MAPPED_ICON_URL,
+} = vi.hoisted(() => ({
+  MAPPED_ITEM: "example-one",
+  SECOND_MAPPED_ITEM: "example-2",
+  TEXT_ONLY_ITEM: "example-text-only",
+  MAPPED_ICON_URL: "/example/example-one.svg",
+  SECOND_MAPPED_ICON_URL: "/example/example-2.svg",
+}));
+
+vi.mock("@/lib/skill-cards", () => ({
+  SKILL_CARDS: {
+    [MAPPED_ITEM]: { icon: MAPPED_ICON_URL },
+    [SECOND_MAPPED_ITEM]: { icon: SECOND_MAPPED_ICON_URL },
+  },
+  TEXT_ONLY_SKILLS: new Set([TEXT_ONLY_ITEM]),
+}));
 
 const GROUP_LABELS = ["Example Group One", "Example Group Two"];
 const GROUP_ITEMS = [
@@ -9,8 +32,37 @@ const GROUP_ITEMS = [
   ["example-item-three", "example-item-four"],
 ];
 const AMPERSAND_LABEL = "Example & Group";
+const CARD_GROUP_ID = CARD_SKILL_GROUP_IDS[0]!;
+const CARD_GROUP_LABEL = "Example Card Group";
+const ALL_CARD_ITEMS = [MAPPED_ITEM, SECOND_MAPPED_ITEM, TEXT_ONLY_ITEM];
+const MIXED_CARD_ITEMS = [MAPPED_ITEM, TEXT_ONLY_ITEM];
+const PROSE_GROUP_ID = PROSE_SKILL_GROUP_IDS[0]!;
+const PROSE_GROUP_LABEL = "Example Prose Group";
+const PROSE_ITEMS = ["example-prose-one", "example-prose-two"];
+const UNKNOWN_GROUP_ID = "example-unknown-group";
+const UNKNOWN_GROUP_LABEL = "Example Unknown Group";
+const UNDECLARED_ITEM = "example-undeclared";
+const UNSAFE_CARD_LABEL = "example-unsafe-label<script>alert(1)</script>";
+const SECOND_CARD_LABEL = "example-second-label";
+const ESCAPED_UNSAFE_CARD_LABEL =
+  "example-unsafe-label&lt;script&gt;alert(1)&lt;/script&gt;";
+const CARD_LIST_CLASS = "grid grid-cols-1 gap-2 sm:grid-cols-2";
 
 type RenderableSkillGroup = Pick<SkillGroup, "id" | "label" | "items">;
+
+function tagsNamed(html: string, name: string): string[] {
+  return html.match(new RegExp(`<${name}\\b[^>]*>`, "g")) ?? [];
+}
+
+function attributeValue(tag: string, name: string): string | undefined {
+  return tag.match(new RegExp(`(?:^|\\s)${name}="([^"]*)"`))?.[1];
+}
+
+function spanLabels(html: string): string[] {
+  return [...html.matchAll(/<span\b[^>]*>([\s\S]*?)<\/span>/g)].map((match) =>
+    match[1]!.trim(),
+  );
+}
 
 function skillGroup(
   id: string,
@@ -42,7 +94,7 @@ describe("SkillGroups", () => {
     }
   });
 
-  it("renders each group's items comma-joined", async () => {
+  it("renders groups outside the card set as comma-joined prose", async () => {
     const html = await renderSkillGroups(exampleGroups());
 
     for (const items of GROUP_ITEMS) {
@@ -64,7 +116,7 @@ describe("SkillGroups", () => {
     );
   });
 
-  it("escapes interpolated text as HTML", async () => {
+  it("escapes interpolated heading text as HTML", async () => {
     const html = await renderSkillGroups([
       skillGroup("example-group-one", AMPERSAND_LABEL, GROUP_ITEMS[0]!),
     ]);
@@ -77,5 +129,137 @@ describe("SkillGroups", () => {
     const html = await renderSkillGroups([]);
 
     expect(html.match(/<h2/g) ?? []).toHaveLength(0);
+  });
+
+  it("renders one ordered card per item in a technical group", async () => {
+    const html = await renderSkillGroups([
+      skillGroup(CARD_GROUP_ID, CARD_GROUP_LABEL, ALL_CARD_ITEMS),
+    ]);
+    const lists = tagsNamed(html, "ul");
+
+    expect(html).toContain(`>${CARD_GROUP_LABEL}</h2>`);
+    expect(lists).toHaveLength(1);
+    expect(attributeValue(lists[0]!, "role")).toBe("list");
+    expect(attributeValue(lists[0]!, "class")).toBe(CARD_LIST_CLASS);
+    expect(tagsNamed(html, "li")).toHaveLength(ALL_CARD_ITEMS.length);
+    expect(spanLabels(html)).toEqual(ALL_CARD_ITEMS);
+    expect(html).not.toContain(ALL_CARD_ITEMS.join(", "));
+    expect(tagsNamed(html, "p")).toHaveLength(0);
+  });
+
+  it("renders a mapped item with the icon from the skill card record", async () => {
+    const html = await renderSkillGroups([
+      skillGroup(CARD_GROUP_ID, CARD_GROUP_LABEL, [MAPPED_ITEM]),
+    ]);
+    const images = tagsNamed(html, "img");
+
+    expect(tagsNamed(html, "li")).toHaveLength(1);
+    expect(images).toHaveLength(1);
+    expect(attributeValue(images[0]!, "src")).toBe(MAPPED_ICON_URL);
+    expect(attributeValue(images[0]!, "alt")).toBe("");
+    expect(attributeValue(images[0]!, "aria-hidden")).toBe("true");
+    expect(spanLabels(html)).toEqual([MAPPED_ITEM]);
+  });
+
+  it("renders a declared text-only item as a card without an image", async () => {
+    const html = await renderSkillGroups([
+      skillGroup(CARD_GROUP_ID, CARD_GROUP_LABEL, [TEXT_ONLY_ITEM]),
+    ]);
+
+    expect(tagsNamed(html, "li")).toHaveLength(1);
+    expect(tagsNamed(html, "img")).toHaveLength(0);
+    expect(spanLabels(html)).toEqual([TEXT_ONLY_ITEM]);
+  });
+
+  it("renders mapped and text-only cards together in one list", async () => {
+    const html = await renderSkillGroups([
+      skillGroup(CARD_GROUP_ID, CARD_GROUP_LABEL, MIXED_CARD_ITEMS),
+    ]);
+    const images = tagsNamed(html, "img");
+
+    expect(tagsNamed(html, "ul")).toHaveLength(1);
+    expect(tagsNamed(html, "li")).toHaveLength(MIXED_CARD_ITEMS.length);
+    expect(images).toHaveLength(1);
+    expect(attributeValue(images[0]!, "src")).toBe(MAPPED_ICON_URL);
+    expect(spanLabels(html)).toEqual(MIXED_CARD_ITEMS);
+  });
+
+  it("keeps comma-separated prose for a prose group", async () => {
+    const html = await renderSkillGroups([
+      skillGroup(PROSE_GROUP_ID, PROSE_GROUP_LABEL, PROSE_ITEMS),
+    ]);
+    const joinedItems = PROSE_ITEMS.join(", ");
+
+    expect(tagsNamed(html, "ul")).toHaveLength(0);
+    expect(tagsNamed(html, "li")).toHaveLength(0);
+    expect(tagsNamed(html, "img")).toHaveLength(0);
+    expect(tagsNamed(html, "p")).toHaveLength(1);
+    expect(html).toMatch(new RegExp(`<p\\b[^>]*>[^<]*${joinedItems}[^<]*</p>`));
+  });
+
+  it("keeps comma-separated prose for an unknown group id", async () => {
+    const html = await renderSkillGroups([
+      skillGroup(UNKNOWN_GROUP_ID, UNKNOWN_GROUP_LABEL, PROSE_ITEMS),
+    ]);
+    const joinedItems = PROSE_ITEMS.join(", ");
+
+    expect(tagsNamed(html, "ul")).toHaveLength(0);
+    expect(tagsNamed(html, "li")).toHaveLength(0);
+    expect(tagsNamed(html, "img")).toHaveLength(0);
+    expect(tagsNamed(html, "p")).toHaveLength(1);
+    expect(html).toContain(joinedItems);
+  });
+
+  it("renders cards for every card id and prose for the prose id", async () => {
+    for (const id of CARD_SKILL_GROUP_IDS) {
+      const html = await renderSkillGroups([
+        skillGroup(id, CARD_GROUP_LABEL, [MAPPED_ITEM]),
+      ]);
+      const lists = tagsNamed(html, "ul");
+
+      expect(lists).toHaveLength(1);
+      expect(attributeValue(lists[0]!, "role")).toBe("list");
+      expect(tagsNamed(html, "li")).toHaveLength(1);
+    }
+
+    const proseHtml = await renderSkillGroups([
+      skillGroup(PROSE_GROUP_ID, PROSE_GROUP_LABEL, PROSE_ITEMS),
+    ]);
+
+    expect(tagsNamed(proseHtml, "ul")).toHaveLength(0);
+    expect(tagsNamed(proseHtml, "p")).toHaveLength(1);
+  });
+
+  it("escapes markup in card labels and preserves their order", async () => {
+    const html = await renderSkillGroups([
+      skillGroup(CARD_GROUP_ID, CARD_GROUP_LABEL, [
+        UNSAFE_CARD_LABEL,
+        SECOND_CARD_LABEL,
+      ]),
+    ]);
+
+    expect(tagsNamed(html, "li")).toHaveLength(2);
+    expect(spanLabels(html)).toEqual([
+      ESCAPED_UNSAFE_CARD_LABEL,
+      SECOND_CARD_LABEL,
+    ]);
+    expect(html).toContain(ESCAPED_UNSAFE_CARD_LABEL);
+    expect(html).not.toContain(UNSAFE_CARD_LABEL);
+    expect(html).not.toContain("<script");
+    expect(html.indexOf(ESCAPED_UNSAFE_CARD_LABEL)).toBeLessThan(
+      html.indexOf(SECOND_CARD_LABEL),
+    );
+  });
+
+  it("renders the text-only fallback for an undeclared item", async () => {
+    const html = await renderSkillGroups([
+      skillGroup(CARD_GROUP_ID, CARD_GROUP_LABEL, [UNDECLARED_ITEM]),
+    ]);
+
+    expect(tagsNamed(html, "ul")).toHaveLength(1);
+    expect(tagsNamed(html, "li")).toHaveLength(1);
+    expect(tagsNamed(html, "img")).toHaveLength(0);
+    expect(spanLabels(html)).toEqual([UNDECLARED_ITEM]);
+    expect(tagsNamed(html, "p")).toHaveLength(0);
   });
 });

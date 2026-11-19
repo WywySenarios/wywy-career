@@ -14,6 +14,7 @@ import {
   summariesToVariants,
 } from "@/lib/cv-entries";
 import { sortSkillGroups } from "@/lib/skills";
+import { assertSkillCatalogCoverage } from "@/lib/skill-coverage";
 import {
   assertKnownStreams,
   buildLookup,
@@ -62,6 +63,7 @@ const orderedCatalog = sortCatalogByOrder(catalog);
 const initialStreamId = defaultStreamId(orderedCatalog);
 
 const skillGroups = sortSkillGroups(skillEntries).map((entry) => entry.data);
+assertSkillCatalogCoverage(skillGroups);
 const contact = contactEntries[0]?.data;
 const summaries = summariesToVariants(summaryRecords, lookup);
 const experience = experienceToEntries(experienceRecords, lookup);

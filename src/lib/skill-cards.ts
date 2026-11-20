@@ -1,3 +1,4 @@
+import ansibleIcon from "@/assets/skill-icons/ansible-original.svg?url&no-inline";
 import argocdIcon from "@/assets/skill-icons/argocd-original.svg?url&no-inline";
 import astroIcon from "@/assets/skill-icons/astro-original.svg?url&no-inline";
 import bashIcon from "@/assets/skill-icons/bash-original.svg?url&no-inline";
@@ -10,8 +11,10 @@ import emptyIcon from "@/assets/skill-icons/empty.svg?url&no-inline";
 import gitIcon from "@/assets/skill-icons/git-original.svg?url&no-inline";
 import goIcon from "@/assets/skill-icons/go-original.svg?url&no-inline";
 import grafanaIcon from "@/assets/skill-icons/grafana-original.svg?url&no-inline";
+import grafanaLokiIcon from "@/assets/skill-icons/grafanaloki-original.svg?url&no-inline";
 import javaIcon from "@/assets/skill-icons/java-original.svg?url&no-inline";
 import javascriptIcon from "@/assets/skill-icons/javascript-original.svg?url&no-inline";
+import jenkinsIcon from "@/assets/skill-icons/jenkins-original.svg?url&no-inline";
 import kubernetesIcon from "@/assets/skill-icons/kubernetes-original.svg?url&no-inline";
 import postgresqlIcon from "@/assets/skill-icons/postgresql-original.svg?url&no-inline";
 import prometheusIcon from "@/assets/skill-icons/prometheus-original.svg?url&no-inline";
@@ -20,6 +23,7 @@ import pythonIcon from "@/assets/skill-icons/python-original.svg?url&no-inline";
 import rIcon from "@/assets/skill-icons/r-original.svg?url&no-inline";
 import reactIcon from "@/assets/skill-icons/react-original.svg?url&no-inline";
 import sqliteIcon from "@/assets/skill-icons/sqlite-original.svg?url&no-inline";
+import terraformIcon from "@/assets/skill-icons/terraform-original.svg?url&no-inline";
 import typescriptIcon from "@/assets/skill-icons/typescript-original.svg?url&no-inline";
 
 export const SKILL_CARDS: Readonly<Record<string, { icon: string }>> = {
@@ -40,10 +44,15 @@ export const SKILL_CARDS: Readonly<Record<string, { icon: string }>> = {
   "Argo CD": { icon: argocdIcon },
   Prometheus: { icon: prometheusIcon },
   Grafana: { icon: grafanaIcon },
+  Loki: { icon: grafanaLokiIcon },
   "Cloudflare Workers": { icon: cloudflareWorkersIcon },
   PostgreSQL: { icon: postgresqlIcon },
   SQLite: { icon: sqliteIcon },
   Docker: { icon: dockerIcon },
+  "Docker Compose": { icon: dockerIcon },
+  Ansible: { icon: ansibleIcon },
+  Terraform: { icon: terraformIcon },
+  Jenkins: { icon: jenkinsIcon },
   "Proxmox VE": { icon: proxmoxIcon },
 };
 
@@ -66,15 +75,10 @@ export const TEXT_ONLY_SKILLS: ReadonlySet<string> = new Set([
   "KEDA",
   "Linkerd",
   "Longhorn",
-  "Loki",
   "SOPS",
   "PostGIS",
-  "Docker Compose",
   "systemd",
   "Cloudflare Tunnel",
-  "Ansible",
-  "Terraform",
-  "Jenkins",
 ]);
 
 function isDeclaredSkill(name: string): boolean {

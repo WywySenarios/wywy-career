@@ -1,0 +1,162 @@
+---
+import { getCollection } from "astro:content";
+import EntryList from "@/components/EntryList.astro";
+import SkillGroups from "@/components/SkillGroups.astro";
+import StreamCarousel from "@/components/StreamCarousel";
+import StreamSection from "@/components/StreamSection.astro";
+import Layout from "@/layouts/Layout.astro";
+import TopBar from "@/components/TopBar";
+import {
+  educationToEntries,
+  experienceToEntries,
+  projectsToEntries,
+  summariesToVariants,
+} from "@/lib/cv-entries";
+import { pillarsToSlides } from "@/lib/pillars";
+import { assertSkillCatalogCoverage } from "@/lib/skill-coverage";
+import { sortSkillGroups } from "@/lib/skills";
+import {
+  assertKnownStreams,
+  buildLookup,
+  defaultStreamId,
+  resolveActiveStream,
+  sortCatalogByOrder,
+  streamPageTitle,
+} from "@/lib/streams";
+
+interface Props {
+  activeStream?: string;
+}
+
+const { activeStream } = Astro.props;
+
+const [
+  skillEntries,
+  contactEntries,
+  summaryEntries,
+  experienceEntries,
+  projectEntries,
+  educationEntries,
+  streamEntries,
+  pillarEntries,
+] = await Promise.all([
+  getCollection("skills"),
+  getCollection("contact"),
+  getCollection("summaryVariants"),
+  getCollection("experience"),
+  getCollection("projects"),
+  getCollection("education"),
+  getCollection("streams"),
+  getCollection("pillars"),
+]);
+
+const catalog = streamEntries.map((entry) => entry.data);
+const summaryRecords = summaryEntries.map((entry) => entry.data);
+const experienceRecords = experienceEntries.map((entry) => entry.data);
+const projectRecords = projectEntries.map((entry) => entry.data);
+const educationRecords = educationEntries.map((entry) => entry.data);
+const cvPillarRecords = pillarEntries.map((entry) => entry.data);
+
+const lookup = buildLookup(catalog);
+
+assertKnownStreams(
+  [
+    ...summaryRecords,
+    ...experienceRecords,
+    ...projectRecords,
+    ...educationRecords,
+    ...cvPillarRecords,
+  ],
+  catalog,
+  lookup,
+);
+
+const orderedCatalog = sortCatalogByOrder(catalog);
+const defaultId = defaultStreamId(orderedCatalog);
+const resolvedStream = resolveActiveStream(activeStream, catalog);
+
+const skillGroups = sortSkillGroups(skillEntries).map((entry) => entry.data);
+assertSkillCatalogCoverage(skillGroups);
+const contact = contactEntries[0]?.data;
+const summaries = summariesToVariants(summaryRecords, lookup);
+const experience = experienceToEntries(experienceRecords, lookup);
+const projects = projectsToEntries(projectRecords, lookup);
+const education = educationToEntries(educationRecords, lookup);
+const pillars = pillarsToSlides(cvPillarRecords, lookup);
+
+const pillarSlides = pillars.map(({ id, label, sentence, streams }) => ({
+  id,
+  title: label,
+  body: sentence,
+  streams,
+}));
+const summarySlides = summaries.map(({ id, text, streams }) => ({
+  id,
+  body: text,
+  streams,
+}));
+
+const name = contact?.name ?? "CV";
+const activeLabel =
+  orderedCatalog.find((entry) => entry.id === resolvedStream)?.label ??
+  resolvedStream;
+const title =
+  resolvedStream === defaultId
+    ? name
+    : streamPageTitle(name, activeLabel);
+---
+
+<Layout title={title}>
+  <TopBar
+    name={name}
+    links={contact?.links ?? []}
+    streams={orderedCatalog}
+    activeStream={resolvedStream}
+    client:load
+  />
+
+  <main class="mx-auto max-w-2xl space-y-6 px-6 py-12">
+    <StreamCarousel
+      heading="Pillars"
+      slideLabel="pillar"
+      activeStream={resolvedStream}
+      slides={pillarSlides}
+      client:load
+    />
+
+    <StreamCarousel
+      heading="Summary"
+      slideLabel="summary"
+      activeStream={resolvedStream}
+      slides={summarySlides}
+      client:load
+    />
+
+    <StreamSection
+      heading="Experience"
+      atoms={experience}
+      activeStream={resolvedStream}
+    >
+      <EntryList entries={experience} activeStream={resolvedStream} />
+    </StreamSection>
+
+    <StreamSection
+      heading="Projects"
+      atoms={projects}
+      activeStream={resolvedStream}
+    >
+      <EntryList entries={projects} activeStream={resolvedStream} />
+    </StreamSection>
+
+    <StreamSection
+      heading="Education"
+      atoms={education}
+      activeStream={resolvedStream}
+    >
+      <EntryList entries={education} activeStream={resolvedStream} />
+    </StreamSection>
+
+    <h2 class="text-xl font-semibold text-foreground">Skills</h2>
+    <SkillGroups groups={skillGroups} />
+  </main>
+</Layout>

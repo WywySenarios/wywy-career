@@ -86,6 +86,39 @@ export function sortCatalogByOrder<T extends OrderedEntry>(
   return [...catalog].sort((a, b) => a.order - b.order);
 }
 
+export type StreamRouteParam = {
+  params: { stream: string };
+};
+
+export function streamRouteParams(
+  catalog: readonly OrderedEntry[],
+): StreamRouteParam[] {
+  return sortCatalogByOrder(catalog).map(({ id }) => ({
+    params: { stream: id },
+  }));
+}
+
+export function resolveActiveStream(
+  requested: string | undefined,
+  catalog: readonly OrderedEntry[],
+): string {
+  if (requested === undefined) {
+    return defaultStreamId(catalog);
+  }
+
+  const canonical = catalog.find((entry) => entry.id === requested)?.id;
+
+  if (canonical === undefined) {
+    throw new Error(`Unknown stream "${requested}".`);
+  }
+
+  return canonical;
+}
+
+export function streamPageTitle(name: string, label: string): string {
+  return `${name} — ${label}`;
+}
+
 function recordsOf(container: StreamContainer): StreamBearers[] {
   return [
     container,
@@ -97,9 +130,8 @@ function recordsOf(container: StreamContainer): StreamBearers[] {
 export function assertKnownStreams(
   containers: readonly StreamContainer[],
   catalog: StreamCatalog,
+  lookup: ReadonlyMap<string, string> = buildLookup(catalog),
 ): void {
-  const lookup = buildLookup(catalog);
-
   for (const container of containers) {
     for (const record of recordsOf(container)) {
       canonicalizeRecordStreams(record, lookup);

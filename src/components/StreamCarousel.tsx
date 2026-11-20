@@ -8,7 +8,6 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import { isVisible } from "@/lib/stream-predicates";
-import { useActiveStream } from "@/lib/use-active-stream";
 
 export type CarouselSlide = {
   id: string;
@@ -17,14 +16,8 @@ export type CarouselSlide = {
   streams: readonly string[];
 };
 
-function useCarouselIndex(api: CarouselApi, activeStream: string): number {
+function useCarouselIndex(api: CarouselApi): number {
   const [activeIndex, setActiveIndex] = useState(0);
-
-  // Remounting the carousel via `key={activeStream}` resets the api but not
-  // this state, so the index must be reset explicitly.
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [activeStream]);
 
   useEffect(() => {
     if (!api) return;
@@ -48,23 +41,20 @@ export type StreamCarouselProps = {
   heading: string;
   slideLabel: string;
   slides: readonly CarouselSlide[];
-  streamIds: readonly string[];
-  defaultId: string;
+  activeStream: string;
 };
 
 export default function StreamCarousel({
   heading,
   slideLabel,
   slides,
-  streamIds,
-  defaultId,
+  activeStream,
 }: StreamCarouselProps) {
-  const activeStream = useActiveStream(streamIds, defaultId);
   const visibleSlides = slides.filter((slide) =>
     isVisible(slide.streams, activeStream),
   );
   const [api, setApi] = useState<CarouselApi>();
-  const activeIndex = useCarouselIndex(api, activeStream);
+  const activeIndex = useCarouselIndex(api);
 
   if (visibleSlides.length === 0) {
     return null;
@@ -73,12 +63,7 @@ export default function StreamCarousel({
   return (
     <>
       <h2 className="text-xl font-semibold text-foreground">{heading}</h2>
-      <Carousel
-        key={activeStream}
-        setApi={setApi}
-        aria-label={heading}
-        className="w-full"
-      >
+      <Carousel setApi={setApi} aria-label={heading} className="w-full">
         <CarouselContent>
           {visibleSlides.map((slide) => (
             <CarouselItem key={slide.id}>

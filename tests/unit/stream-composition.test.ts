@@ -2,7 +2,10 @@ import { experimental_AstroContainer as AstroContainer } from "astro/container";
 import { Window } from "happy-dom";
 import { describe, expect, it } from "vitest";
 import EntryList from "@/components/EntryList.astro";
-import { applyStreamFilter } from "@/lib/stream-filter-dom";
+import StreamSection from "@/components/StreamSection.astro";
+
+const ACTIVE_STREAM = "stream-two";
+const HEADING = "Experience";
 
 type Entry = {
   id: string;
@@ -11,59 +14,87 @@ type Entry = {
   bullets: { text: string; streams: string[] }[];
 };
 
-function wrapperFor(html: string): ParentNode {
-  const browser = new Window();
-  const wrapper = browser.document.createElement("div");
-  wrapper.setAttribute("data-stream-section", "");
-  wrapper.innerHTML = html;
+function parseHtml(html: string) {
+  const window = new Window();
+  window.document.body.innerHTML = html;
 
-  return wrapper as unknown as ParentNode;
-}
-
-function isHidden(root: ParentNode, selector: string): boolean {
-  const found = root.querySelector(selector);
-
-  if (found === null) {
-    throw new Error(`Missing element: ${selector}`);
-  }
-
-  return found.hasAttribute("hidden");
+  return window.document;
 }
 
 async function renderEntries(entries: Entry[]): Promise<string> {
   const container = await AstroContainer.create();
 
   return container.renderToString(EntryList, {
-    props: { entries, activeStream: "stream-one" },
+    props: { entries, activeStream: ACTIVE_STREAM },
   });
 }
 
-describe("applying the stream filter to rendered Astro markup", () => {
-  it("updates rendered entry atoms and bullets from their data-streams values", async () => {
+async function renderSection(atoms: { streams: string[] }[]): Promise<string> {
+  const container = await AstroContainer.create();
+
+  return container.renderToString(StreamSection, {
+    props: { heading: HEADING, atoms, activeStream: ACTIVE_STREAM },
+  });
+}
+
+describe("server-rendered stream composition", () => {
+  it("hides stream-one entry atoms under stream-two", async () => {
     const html = await renderEntries([
       {
-        id: "example-entry-one",
-        title: "example-title",
+        id: "entry-one",
+        title: "Entry One",
+        streams: ["stream-one"],
+        bullets: [],
+      },
+      {
+        id: "entry-two",
+        title: "Entry Two",
+        streams: ["stream-two"],
+        bullets: [],
+      },
+    ]);
+    const sections = parseHtml(html).querySelectorAll("section");
+
+    expect(sections).toHaveLength(2);
+    const [streamOne, streamTwo] = sections;
+
+    expect(streamOne).toBeTruthy();
+    expect(streamTwo).toBeTruthy();
+    expect(streamOne?.hasAttribute("hidden")).toBe(true);
+    expect(streamTwo?.hasAttribute("hidden")).toBe(false);
+  });
+
+  it("hides stream-one bullets under stream-two", async () => {
+    const html = await renderEntries([
+      {
+        id: "entry-one",
+        title: "Entry One",
         streams: ["stream-two"],
         bullets: [
-          { text: "Example bullet one.", streams: ["stream-two"] },
-          { text: "Example bullet two.", streams: ["stream-one"] },
+          { text: "Bullet One", streams: ["stream-one"] },
+          { text: "Bullet Two", streams: ["stream-two"] },
         ],
       },
     ]);
-    const root = wrapperFor(html);
+    const items = parseHtml(html).querySelectorAll("li");
 
-    applyStreamFilter(root, "stream-two");
+    expect(items).toHaveLength(2);
+    const [streamOne, streamTwo] = items;
 
-    expect(
-      isHidden(root, '[data-stream-atom][data-streams="stream-two"]'),
-    ).toBe(false);
-    expect(isHidden(root, 'li[data-streams="stream-two"]')).toBe(false);
-    expect(isHidden(root, 'li[data-streams="stream-one"]')).toBe(true);
-    expect(
-      root
-        .querySelector('[data-stream-atom][data-streams="stream-two"]')
-        ?.getAttribute("data-streams"),
-    ).toBe("stream-two");
+    expect(streamOne).toBeTruthy();
+    expect(streamTwo).toBeTruthy();
+    expect(streamOne?.hasAttribute("hidden")).toBe(true);
+    expect(streamTwo?.hasAttribute("hidden")).toBe(false);
+  });
+
+  it("hides a section whose atoms all belong to stream-one", async () => {
+    const html = await renderSection([
+      { streams: ["stream-one"] },
+      { streams: ["stream-one"] },
+    ]);
+    const wrapper = parseHtml(html).querySelector("[data-stream-section]");
+
+    expect(wrapper).toBeTruthy();
+    expect(wrapper?.hasAttribute("hidden")).toBe(true);
   });
 });

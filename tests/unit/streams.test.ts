@@ -5,7 +5,10 @@ import {
   canonicalizeStreams,
   defaultStreamId,
   parseStreamCatalog,
+  resolveActiveStream,
   sortCatalogByOrder,
+  streamPageTitle,
+  streamRouteParams,
 } from "@/lib/streams";
 
 const CATALOG = [
@@ -62,7 +65,6 @@ describe("assertKnownStreams", () => {
       /example-bullet-one/,
     );
   });
-
 });
 
 describe("canonicalizeStreams", () => {
@@ -169,5 +171,73 @@ describe("sortCatalogByOrder", () => {
 
     expect(sorted.map((entry) => entry.order)).toEqual([0, 1, 2]);
     expect(catalog.map((entry) => entry.order)).toEqual([2, 0, 1]);
+  });
+});
+
+const UNSORTED_CATALOG = [
+  {
+    id: "stream-two",
+    label: "Stream Two",
+    aliases: ["alias-two"],
+    order: 1,
+  },
+  {
+    id: "stream-one",
+    label: "Stream One",
+    aliases: ["alias-one"],
+    order: 0,
+  },
+  {
+    id: "stream-three",
+    label: "Stream Three",
+    aliases: ["alias-three"],
+    order: 2,
+  },
+];
+
+describe("streamRouteParams", () => {
+  it("returns one route per stream in catalog order", () => {
+    expect(streamRouteParams(UNSORTED_CATALOG)).toEqual([
+      { params: { stream: "stream-one" } },
+      { params: { stream: "stream-two" } },
+      { params: { stream: "stream-three" } },
+    ]);
+  });
+
+  it("returns no routes for an empty catalog", () => {
+    expect(streamRouteParams([])).toEqual([]);
+  });
+});
+
+describe("resolveActiveStream", () => {
+  it("falls back to the default stream when the request is undefined", () => {
+    expect(resolveActiveStream(undefined, UNSORTED_CATALOG)).toBe("stream-one");
+  });
+
+  it("keeps a known stream id unchanged", () => {
+    expect(resolveActiveStream("stream-two", UNSORTED_CATALOG)).toBe(
+      "stream-two",
+    );
+  });
+
+  it("rejects an unknown stream with the exact message", () => {
+    let caught: unknown;
+
+    try {
+      resolveActiveStream("nope", UNSORTED_CATALOG);
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error).message).toBe('Unknown stream "nope".');
+  });
+});
+
+describe("streamPageTitle", () => {
+  it("joins the name and stream label with an em dash", () => {
+    expect(streamPageTitle("example-name", "Example Stream")).toBe(
+      "example-name — Example Stream",
+    );
   });
 });

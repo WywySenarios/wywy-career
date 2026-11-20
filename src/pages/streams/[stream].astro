@@ -1,0 +1,17 @@
+---
+import { getCollection } from "astro:content";
+import CvPage from "@/components/CvPage.astro";
+import { streamRouteParams } from "@/lib/streams";
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const entries = await getCollection("streams");
+
+  return streamRouteParams(entries.map((entry) => entry.data));
+}
+
+const streamId = Astro.params.stream;
+---
+
+<CvPage activeStream={streamId} />

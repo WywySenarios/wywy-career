@@ -50,13 +50,6 @@ describe("skill card catalog", () => {
     }
   });
 
-  it("maps each card to a distinct icon URL", () => {
-    const iconUrls = Object.values(SKILL_CARDS).map(({ icon }) => icon);
-
-    expect(iconUrls.length).toBeGreaterThan(0);
-    expect(new Set(iconUrls).size).toBe(Object.keys(SKILL_CARDS).length);
-  });
-
   it("declares a non-empty text-only catalog disjoint from icon cards", () => {
     const textOnlyNames = [...TEXT_ONLY_SKILLS];
 

@@ -6,6 +6,7 @@ import cloudflareWorkersIcon from "@/assets/skill-icons/cloudflareworkers-origin
 import cppIcon from "@/assets/skill-icons/cplusplus-original.svg?url&no-inline";
 import djangoIcon from "@/assets/skill-icons/django-plain.svg?url&no-inline";
 import dockerIcon from "@/assets/skill-icons/docker-original.svg?url&no-inline";
+import emptyIcon from "@/assets/skill-icons/empty.svg?url&no-inline";
 import gitIcon from "@/assets/skill-icons/git-original.svg?url&no-inline";
 import goIcon from "@/assets/skill-icons/go-original.svg?url&no-inline";
 import grafanaIcon from "@/assets/skill-icons/grafana-original.svg?url&no-inline";
@@ -45,6 +46,14 @@ export const SKILL_CARDS: Readonly<Record<string, { icon: string }>> = {
   Docker: { icon: dockerIcon },
   "Proxmox VE": { icon: proxmoxIcon },
 };
+
+export const EMPTY_SKILL_ICON = emptyIcon;
+
+export function skillCardIcon(name: string): string {
+  return Object.hasOwn(SKILL_CARDS, name)
+    ? SKILL_CARDS[name].icon
+    : EMPTY_SKILL_ICON;
+}
 
 export const TEXT_ONLY_SKILLS: ReadonlySet<string> = new Set([
   "SQL",

@@ -1,7 +1,7 @@
 # Devicon License
 
-The SVG files in this directory are unmodified icons from the Devicon project,
-pinned to release 2.18.0.
+The Devicon files in this directory are unmodified icons from the Devicon project, pinned to release 2.18.0.
+`empty.svg` is an original blank placeholder, not Devicon-sourced.
 
 - Source: https://github.com/devicons/devicon/tree/v2.18.0/icons
 - CDN base: https://cdn.jsdelivr.net/gh/devicons/devicon@v2.18.0/

@@ -5,8 +5,13 @@ import { load } from "js-yaml";
 import { describe, expect, it } from "vitest";
 import { CV_SOURCES } from "@/lib/constants";
 import { assertSkillCatalogCoverage } from "@/lib/skill-coverage";
-import { SKILL_CARDS, TEXT_ONLY_SKILLS } from "@/lib/skill-cards";
-import { CARD_SKILL_GROUP_IDS } from "@/lib/skills";
+import {
+  EMPTY_SKILL_ICON,
+  SKILL_CARDS,
+  TEXT_ONLY_SKILLS,
+  skillCardIcon,
+} from "@/lib/skill-cards";
+import { CARD_SKILL_GROUP_IDS, technicalSkillItems } from "@/lib/skills";
 import type { SkillGroup } from "@/lib/skills-schema";
 import { skillGroupSchema } from "@/lib/skills-schema";
 
@@ -33,6 +38,29 @@ function thrownMessage(run: () => void): string {
 
   return "";
 }
+
+describe("technical skill card icons", () => {
+  it("resolves every technical item to a declared icon or the placeholder", () => {
+    const items = technicalSkillItems(SKILL_GROUPS);
+
+    expect(items.length).toBeGreaterThan(0);
+
+    for (const item of items) {
+      const icon = skillCardIcon(item);
+
+      expect(typeof icon).toBe("string");
+      expect(icon.length).toBeGreaterThan(0);
+      expect(icon).toContain(".svg");
+
+      if (Object.hasOwn(SKILL_CARDS, item)) {
+        expect(icon).toBe(SKILL_CARDS[item]!.icon);
+        expect(icon).not.toBe(EMPTY_SKILL_ICON);
+      } else {
+        expect(icon).toBe(EMPTY_SKILL_ICON);
+      }
+    }
+  });
+});
 
 describe("assertSkillCatalogCoverage", () => {
   it("accepts the repository skill catalog", () => {

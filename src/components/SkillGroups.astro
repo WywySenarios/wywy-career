@@ -1,6 +1,6 @@
 ---
 import SkillCard from "@/components/SkillCard.astro";
-import { SKILL_CARDS } from "@/lib/skill-cards";
+import { skillCardIcon } from "@/lib/skill-cards";
 import { formatSkillItems, isCardSkillGroup } from "@/lib/skills";
 import type { SkillGroup } from "@/lib/skills-schema";
 
@@ -17,13 +17,9 @@ const { groups } = Astro.props;
       <h2 class="text-lg font-semibold text-foreground">{group.label}</h2>
       {isCardSkillGroup(group.id) ? (
         <ul role="list" class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {group.items.map((item) =>
-            Object.hasOwn(SKILL_CARDS, item) ? (
-              <SkillCard label={item} icon={SKILL_CARDS[item].icon} />
-            ) : (
-              <SkillCard label={item} />
-            ),
-          )}
+          {group.items.map((item) => (
+            <SkillCard label={item} icon={skillCardIcon(item)} />
+          ))}
         </ul>
       ) : (
         <p class="text-sm text-muted-foreground">

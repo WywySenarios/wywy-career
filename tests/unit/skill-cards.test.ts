@@ -1,10 +1,18 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  EMPTY_SKILL_ICON,
   SKILL_CARDS,
   TEXT_ONLY_SKILLS,
   assertSkillCardCoverage,
+  skillCardIcon,
 } from "@/lib/skill-cards";
 
+const EMPTY_ICON_PATH = path.resolve(
+  import.meta.dirname,
+  "../../src/assets/skill-icons/empty.svg",
+);
 const DECLARED_ITEMS = [...Object.keys(SKILL_CARDS), ...TEXT_ONLY_SKILLS];
 const UNKNOWN_NAME = "Card Catalog Probe";
 const PROTOTYPE_NAMES = ["toString", "constructor", "__proto__"];
@@ -63,6 +71,49 @@ describe("skill card catalog", () => {
     );
 
     expect(overlap).toEqual([]);
+  });
+});
+
+describe("skillCardIcon", () => {
+  it("declares the transparent placeholder icon whose asset matches its contents", () => {
+    expect(readFileSync(EMPTY_ICON_PATH, "utf8").trim()).toBe(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"/>',
+    );
+
+    expect(typeof EMPTY_SKILL_ICON).toBe("string");
+    expect(EMPTY_SKILL_ICON.length).toBeGreaterThan(0);
+    expect(EMPTY_SKILL_ICON).toContain(".svg");
+
+    const cardIcons = Object.values(SKILL_CARDS).map(({ icon }) => icon);
+
+    expect(cardIcons).not.toContain(EMPTY_SKILL_ICON);
+  });
+
+  it("resolves every declared card name to its declared icon", () => {
+    const names = Object.keys(SKILL_CARDS);
+
+    expect(names.length).toBeGreaterThan(0);
+
+    for (const name of names) {
+      expect(skillCardIcon(name)).toBe(SKILL_CARDS[name]!.icon);
+    }
+  });
+
+  it("resolves text-only, undeclared, and prototype names to the placeholder", () => {
+    for (const name of TEXT_ONLY_SKILLS) {
+      expect(skillCardIcon(name)).toBe(EMPTY_SKILL_ICON);
+    }
+
+    expect(skillCardIcon("example-undeclared-icon")).toBe(EMPTY_SKILL_ICON);
+
+    for (const name of [
+      "toString",
+      "constructor",
+      "__proto__",
+      "hasOwnProperty",
+    ]) {
+      expect(skillCardIcon(name)).toBe(EMPTY_SKILL_ICON);
+    }
   });
 });
 

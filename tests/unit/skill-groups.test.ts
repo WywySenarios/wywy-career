@@ -10,20 +10,29 @@ const {
   TEXT_ONLY_ITEM,
   MAPPED_ICON_URL,
   SECOND_MAPPED_ICON_URL,
+  EMPTY_ICON_URL,
 } = vi.hoisted(() => ({
   MAPPED_ITEM: "example-one",
   SECOND_MAPPED_ITEM: "example-2",
   TEXT_ONLY_ITEM: "example-text-only",
   MAPPED_ICON_URL: "/example/example-one.svg",
   SECOND_MAPPED_ICON_URL: "/example/example-2.svg",
+  EMPTY_ICON_URL: "/example/empty.svg",
 }));
 
 vi.mock("@/lib/skill-cards", () => ({
-  SKILL_CARDS: {
-    [MAPPED_ITEM]: { icon: MAPPED_ICON_URL },
-    [SECOND_MAPPED_ITEM]: { icon: SECOND_MAPPED_ICON_URL },
+  skillCardIcon: (name: string) => {
+    if (name === MAPPED_ITEM) {
+      return MAPPED_ICON_URL;
+    }
+
+    if (name === SECOND_MAPPED_ITEM) {
+      return SECOND_MAPPED_ICON_URL;
+    }
+
+    return EMPTY_ICON_URL;
   },
-  TEXT_ONLY_SKILLS: new Set([TEXT_ONLY_ITEM]),
+  EMPTY_SKILL_ICON: EMPTY_ICON_URL,
 }));
 
 const GROUP_LABELS = ["Example Group One", "Example Group Two"];
@@ -161,13 +170,15 @@ describe("SkillGroups", () => {
     expect(spanLabels(html)).toEqual([MAPPED_ITEM]);
   });
 
-  it("renders a declared text-only item as a card without an image", async () => {
+  it("renders a declared text-only item with the placeholder icon", async () => {
     const html = await renderSkillGroups([
       skillGroup(CARD_GROUP_ID, CARD_GROUP_LABEL, [TEXT_ONLY_ITEM]),
     ]);
+    const images = tagsNamed(html, "img");
 
     expect(tagsNamed(html, "li")).toHaveLength(1);
-    expect(tagsNamed(html, "img")).toHaveLength(0);
+    expect(images).toHaveLength(1);
+    expect(attributeValue(images[0]!, "src")).toBe(EMPTY_ICON_URL);
     expect(spanLabels(html)).toEqual([TEXT_ONLY_ITEM]);
   });
 
@@ -179,8 +190,11 @@ describe("SkillGroups", () => {
 
     expect(tagsNamed(html, "ul")).toHaveLength(1);
     expect(tagsNamed(html, "li")).toHaveLength(MIXED_CARD_ITEMS.length);
-    expect(images).toHaveLength(1);
-    expect(attributeValue(images[0]!, "src")).toBe(MAPPED_ICON_URL);
+    expect(images).toHaveLength(2);
+    expect(images.map((image) => attributeValue(image, "src"))).toEqual([
+      MAPPED_ICON_URL,
+      EMPTY_ICON_URL,
+    ]);
     expect(spanLabels(html)).toEqual(MIXED_CARD_ITEMS);
   });
 
@@ -251,14 +265,55 @@ describe("SkillGroups", () => {
     );
   });
 
+  it("reserves an icon slot for every card item and none for prose groups", async () => {
+    const cardHtml = await renderSkillGroups([
+      skillGroup(CARD_GROUP_ID, CARD_GROUP_LABEL, ALL_CARD_ITEMS),
+    ]);
+    const cardImages = tagsNamed(cardHtml, "img");
+
+    expect(tagsNamed(cardHtml, "li")).toHaveLength(ALL_CARD_ITEMS.length);
+    expect(cardImages).toHaveLength(ALL_CARD_ITEMS.length);
+    expect(cardImages.map((image) => attributeValue(image, "src"))).toEqual([
+      MAPPED_ICON_URL,
+      SECOND_MAPPED_ICON_URL,
+      EMPTY_ICON_URL,
+    ]);
+
+    const mixedHtml = await renderSkillGroups([
+      skillGroup(CARD_GROUP_ID, CARD_GROUP_LABEL, MIXED_CARD_ITEMS),
+    ]);
+
+    expect(tagsNamed(mixedHtml, "img")).toHaveLength(MIXED_CARD_ITEMS.length);
+
+    const undeclaredHtml = await renderSkillGroups([
+      skillGroup(CARD_GROUP_ID, CARD_GROUP_LABEL, [UNDECLARED_ITEM]),
+    ]);
+    const undeclaredImages = tagsNamed(undeclaredHtml, "img");
+
+    expect(undeclaredImages).toHaveLength(1);
+    expect(attributeValue(undeclaredImages[0]!, "src")).toBe(EMPTY_ICON_URL);
+
+    const proseHtml = await renderSkillGroups([
+      skillGroup(PROSE_GROUP_ID, PROSE_GROUP_LABEL, PROSE_ITEMS),
+    ]);
+    const unknownHtml = await renderSkillGroups([
+      skillGroup(UNKNOWN_GROUP_ID, UNKNOWN_GROUP_LABEL, PROSE_ITEMS),
+    ]);
+
+    expect(tagsNamed(proseHtml, "img")).toHaveLength(0);
+    expect(tagsNamed(unknownHtml, "img")).toHaveLength(0);
+  });
+
   it("renders the text-only fallback for an undeclared item", async () => {
     const html = await renderSkillGroups([
       skillGroup(CARD_GROUP_ID, CARD_GROUP_LABEL, [UNDECLARED_ITEM]),
     ]);
+    const images = tagsNamed(html, "img");
 
     expect(tagsNamed(html, "ul")).toHaveLength(1);
     expect(tagsNamed(html, "li")).toHaveLength(1);
-    expect(tagsNamed(html, "img")).toHaveLength(0);
+    expect(images).toHaveLength(1);
+    expect(attributeValue(images[0]!, "src")).toBe(EMPTY_ICON_URL);
     expect(spanLabels(html)).toEqual([UNDECLARED_ITEM]);
     expect(tagsNamed(html, "p")).toHaveLength(0);
   });

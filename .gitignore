@@ -13,3 +13,9 @@ dist/
 .eslintcache
 *.tsbuildinfo
 .ruff_cache/
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/*.tfplan

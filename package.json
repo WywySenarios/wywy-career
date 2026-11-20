@@ -13,7 +13,9 @@
     "build": "astro check && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "scripts/tests/unit.sh"
+    "test": "scripts/tests/unit.sh",
+    "deploy": "scripts/deploy.sh",
+    "test:terraform": "scripts/tests/terraform.sh"
   },
   "dependencies": {
     "@astrojs/react": "5.0.7",

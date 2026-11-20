@@ -10,6 +10,7 @@
 | `src/styles/global.css` | Tailwind CSS entrypoint and theme tokens.                        |
 | `components.json`       | shadcn/ui configuration: new-york style, neutral base, CSS vars. |
 | `astro.config.mts`      | Astro integrations, Vite plugins, and the `@/` alias.            |
+| `terraform/`            | Cloudflare Worker and Custom Domain. See `terraform/README.md`.  |
 | `secrets/`              | sops-encrypted secrets.                                          |
 
 ## Development setup
@@ -23,11 +24,24 @@ npm run dev
 
 ## Testing
 
-`npm test` is the unit-test entrypoint. It runs `scripts/tests/unit.sh`, which runs Vitest over `tests/unit`.
+```sh
+npm test               # `scripts/tests/unit.sh`
+npm run test:terraform # `scripts/tests/terraform.sh`
+```
 
 Add a test under `tests/unit/` for each module you change, named after the module under test. For example, `src/lib/skills.ts` is covered by `tests/unit/skills.test.ts`.
 
 Please do a final verification with `npm run build`.
+
+## Deployment
+
+```sh
+npm run deploy
+```
+
+The cloudflare token needs `Workers Scripts: Edit` and `Zone: Read` permissions.
+
+The sops key defaults to `$HOME/.config/sops/age/keys.txt`; this machine needs `SOPS_AGE_KEY_FILE` set explicitly. Export it before manual `sops`, `terraform plan`, or `terraform destroy` commands.
 
 ### pre-commit
 

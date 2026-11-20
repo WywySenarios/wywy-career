@@ -74,6 +74,12 @@ describe("TopBar", () => {
     expect(headings).toHaveLength(1);
     expect(headings[0]?.textContent).toBe(NAME);
 
+    const nameLink = within(headings[0] as HTMLElement).getByRole("link", {
+      name: NAME,
+    });
+
+    expect(nameLink.getAttribute("href")).toBe("/");
+
     for (const link of LINKS) {
       const anchor = screen.getByRole("link", { name: link.label });
 
@@ -82,7 +88,7 @@ describe("TopBar", () => {
     }
 
     expect(screen.getByText("R&D")).toBeTruthy();
-    expect(screen.getAllByRole("link")).toHaveLength(LINKS.length);
+    expect(screen.getAllByRole("link")).toHaveLength(LINKS.length + 1);
   });
 
   it("lists every stream route in order when Resume is clicked", async () => {
@@ -136,6 +142,19 @@ describe("TopBar", () => {
     expect(current[0]?.getAttribute("href")).toBe("/streams/example-three");
   });
 
+  it("marks no stream as current when activeStream is omitted", async () => {
+    render(<TopBar name={NAME} links={LINKS} streams={STREAMS} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Resume" }));
+
+    const links = await within(careerStreamNav()).findAllByRole("link");
+
+    expect(links).toHaveLength(STREAMS.length);
+    expect(
+      links.filter((link) => link.getAttribute("aria-current") === "page"),
+    ).toHaveLength(0);
+  });
+
   it("server-renders the header, nav landmark, Resume trigger, and profile anchors without closed stream links", () => {
     const html = renderToStaticMarkup(
       <TopBar
@@ -147,6 +166,7 @@ describe("TopBar", () => {
     );
 
     expect(html).toContain(NAME);
+    expect(html).toMatch(/<a[^>]*href="\/"[^>]*>example-name<\/a>/);
     expect(html).toContain('aria-label="Career stream"');
     expect(html).toContain("Resume");
     expect(html).toContain("example.com/github");
@@ -168,6 +188,10 @@ describe("TopBar", () => {
 
     expect(dialog).toBeTruthy();
     expect(within(dialog).getByText(NAME)).toBeTruthy();
+
+    const nameLink = within(dialog).getByRole("link", { name: NAME });
+
+    expect(nameLink.getAttribute("href")).toBe("/");
   });
 
   it("lists every stream and profile route inside the mobile menu in order", async () => {

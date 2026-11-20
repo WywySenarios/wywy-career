@@ -33,7 +33,7 @@ export type TopBarProps = {
   name: string;
   links: readonly TopBarLink[];
   streams: readonly TopBarStream[];
-  activeStream: string;
+  activeStream?: string;
 };
 
 type StreamItem = {
@@ -45,7 +45,7 @@ type StreamItem = {
 
 function toStreamItems(
   streams: readonly TopBarStream[],
-  activeStream: string,
+  activeStream?: string,
 ): StreamItem[] {
   return streams.map((stream) => ({
     id: stream.id,

@@ -1,11 +1,27 @@
 ---
 import "@/styles/global.css";
+import { getCollection } from "astro:content";
+import TopBar from "@/components/TopBar";
+import { sortCatalogByOrder } from "@/lib/streams";
 
 interface Props {
   title: string;
+  activeStream?: string;
 }
 
-const { title } = Astro.props;
+const { title, activeStream } = Astro.props;
+
+const [contactEntries, streamEntries] = await Promise.all([
+  getCollection("contact"),
+  getCollection("streams"),
+]);
+
+const contact = contactEntries[0]?.data;
+const name = contact?.name ?? "CV";
+const links = contact?.links ?? [];
+const streams = sortCatalogByOrder(
+  streamEntries.map((entry) => entry.data),
+);
 ---
 
 <!doctype html>
@@ -16,6 +32,13 @@ const { title } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
+    <TopBar
+      name={name}
+      links={links}
+      streams={streams}
+      activeStream={activeStream}
+      client:idle
+    />
     <slot />
   </body>
 </html>

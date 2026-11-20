@@ -1,11 +1,11 @@
 import { z } from "astro/zod";
+import { nonBlank } from "@/lib/schema-helpers";
 
-const trimmedIdentity = z.string().trim().min(1);
 const nonBlankText = z.string().regex(/\S/);
 
 export const skillGroupSchema = z.strictObject({
-  id: trimmedIdentity,
-  label: trimmedIdentity,
+  id: nonBlank,
+  label: nonBlank,
   tags: z.array(z.string()).default([]),
   items: z.array(nonBlankText).nonempty(),
 });

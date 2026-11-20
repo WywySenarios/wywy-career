@@ -9,6 +9,7 @@ import {
   projectSchema,
   summaryVariantSchema,
 } from "./lib/cv-schemas";
+import { pillarSchema } from "./lib/pillars-schema";
 import { skillGroupSchema } from "./lib/skills-schema";
 import { streamCatalogEntrySchema } from "./lib/streams-schema";
 import { parseStreamCatalog } from "./lib/streams";
@@ -53,5 +54,9 @@ export const collections = {
   streams: defineCollection({
     loader: file(CV_SOURCES.streams, { parser: parseStreamCatalog }),
     schema: streamCatalogEntrySchema,
+  }),
+  pillars: defineCollection({
+    loader: file(CV_SOURCES.pillars),
+    schema: pillarSchema,
   }),
 };

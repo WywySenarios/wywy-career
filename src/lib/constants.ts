@@ -8,4 +8,5 @@ export const CV_SOURCES = {
   education: `${CV_DATA_DIR}/education.yaml`,
   skills: `${CV_DATA_DIR}/skills.yaml`,
   streams: `${CV_DATA_DIR}/streams.yaml`,
+  pillars: `${CV_DATA_DIR}/pillars.yaml`,
 } as const;

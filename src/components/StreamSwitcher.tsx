@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { applyStreamFilter } from "@/lib/stream-filter-dom";
-import { activeStreamFromHash } from "@/lib/stream-predicates";
+import { useActiveStream } from "@/lib/use-active-stream";
 
 type Stream = {
   id: string;
@@ -17,23 +17,10 @@ export default function StreamSwitcher({
   streams,
   defaultId,
 }: StreamSwitcherProps) {
-  const [active, setActive] = useState(defaultId);
-
-  useEffect(() => {
-    const knownIds = streams.map((stream) => stream.id);
-    const syncFromHash = () => {
-      setActive(
-        activeStreamFromHash(window.location.hash, knownIds, defaultId),
-      );
-    };
-
-    syncFromHash();
-    window.addEventListener("hashchange", syncFromHash);
-
-    return () => {
-      window.removeEventListener("hashchange", syncFromHash);
-    };
-  }, [defaultId, streams]);
+  const active = useActiveStream(
+    streams.map((stream) => stream.id),
+    defaultId,
+  );
 
   useEffect(() => {
     applyStreamFilter(document, active);

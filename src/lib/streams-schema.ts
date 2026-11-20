@@ -1,6 +1,5 @@
 import { z } from "astro/zod";
-
-const nonBlank = z.string().trim().min(1);
+import { nonBlank } from "@/lib/schema-helpers";
 
 export const streamCatalogEntrySchema = z.strictObject({
   id: nonBlank,

@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import ContactDetails from "@/components/ContactDetails.astro";
 import EntryList from "@/components/EntryList.astro";
+import PillarsCarousel from "@/components/PillarsCarousel";
 import SkillGroups from "@/components/SkillGroups.astro";
 import StreamSection from "@/components/StreamSection.astro";
 import StreamSwitcher from "@/components/StreamSwitcher";
@@ -13,8 +14,9 @@ import {
   projectsToEntries,
   summariesToVariants,
 } from "@/lib/cv-entries";
-import { sortSkillGroups } from "@/lib/skills";
+import { pillarsToSlides } from "@/lib/pillars";
 import { assertSkillCatalogCoverage } from "@/lib/skill-coverage";
+import { sortSkillGroups } from "@/lib/skills";
 import {
   assertKnownStreams,
   buildLookup,
@@ -32,6 +34,7 @@ const [
   projectEntries,
   educationEntries,
   streamEntries,
+  pillarEntries,
 ] = await Promise.all([
   getCollection("skills"),
   getCollection("contact"),
@@ -40,6 +43,7 @@ const [
   getCollection("projects"),
   getCollection("education"),
   getCollection("streams"),
+  getCollection("pillars"),
 ]);
 
 const catalog = streamEntries.map((entry) => entry.data);
@@ -47,6 +51,7 @@ const summaryRecords = summaryEntries.map((entry) => entry.data);
 const experienceRecords = experienceEntries.map((entry) => entry.data);
 const projectRecords = projectEntries.map((entry) => entry.data);
 const educationRecords = educationEntries.map((entry) => entry.data);
+const cvPillarRecords = pillarEntries.map((entry) => entry.data);
 
 assertKnownStreams(
   [
@@ -54,6 +59,7 @@ assertKnownStreams(
     ...experienceRecords,
     ...projectRecords,
     ...educationRecords,
+    ...cvPillarRecords,
   ],
   catalog,
 );
@@ -69,6 +75,7 @@ const summaries = summariesToVariants(summaryRecords, lookup);
 const experience = experienceToEntries(experienceRecords, lookup);
 const projects = projectsToEntries(projectRecords, lookup);
 const education = educationToEntries(educationRecords, lookup);
+const pillars = pillarsToSlides(cvPillarRecords, lookup);
 ---
 
 <Layout title={contact?.name ?? "CV"}>
@@ -87,6 +94,13 @@ const education = educationToEntries(educationRecords, lookup);
         id,
         label,
       }))}
+      defaultId={initialStreamId}
+      client:load
+    />
+
+    <PillarsCarousel
+      pillars={pillars}
+      streamIds={orderedCatalog.map(({ id }) => id)}
       defaultId={initialStreamId}
       client:load
     />

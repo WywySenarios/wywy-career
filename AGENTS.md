@@ -6,6 +6,10 @@ Run `npm run build` before finishing any change. It runs `astro check` and then 
 
 Never commit with `--no-verify`.
 
+Never include personal informations in tests.
+
+Always use `example-xxx` values as example values in tests.
+
 ## Conventions
 
 - The site is static.

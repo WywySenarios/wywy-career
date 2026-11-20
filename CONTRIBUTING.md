@@ -51,3 +51,5 @@ Do not commit with `--no-verify`.
 - Style with Tailwind utility classes. Theme colors are CSS variables defined in `src/styles/global.css`.
 - Import internal modules through the `@/` alias rather than relative parent paths.
 - Commit messages are imperative and describe the change.
+- Tests should reveal **absolutely no personal information**, regardless of whether or not the website is publically accessible.
+- Example values inside tests should be `example-xxx`.

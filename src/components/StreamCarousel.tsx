@@ -7,25 +7,21 @@ import {
   CarouselPrevious,
   type CarouselApi,
 } from "@/components/ui/carousel";
-import { visiblePillars, type PillarSlide } from "@/lib/pillars";
+import { isVisible } from "@/lib/stream-predicates";
 import { useActiveStream } from "@/lib/use-active-stream";
 
-type PillarsCarouselProps = {
-  pillars: readonly PillarSlide[];
-  streamIds: readonly string[];
-  defaultId: string;
+export type CarouselSlide = {
+  id: string;
+  title?: string;
+  body: string;
+  streams: readonly string[];
 };
 
-export default function PillarsCarousel({
-  pillars,
-  streamIds,
-  defaultId,
-}: PillarsCarouselProps) {
-  const activeStream = useActiveStream(streamIds, defaultId);
-  const slides = visiblePillars(pillars, activeStream);
-  const [api, setApi] = useState<CarouselApi>();
+function useCarouselIndex(api: CarouselApi, activeStream: string): number {
   const [activeIndex, setActiveIndex] = useState(0);
 
+  // Remounting the carousel via `key={activeStream}` resets the api but not
+  // this state, so the index must be reset explicitly.
   useEffect(() => {
     setActiveIndex(0);
   }, [activeStream]);
@@ -45,25 +41,52 @@ export default function PillarsCarousel({
     };
   }, [api]);
 
-  if (slides.length === 0) {
+  return activeIndex;
+}
+
+export type StreamCarouselProps = {
+  heading: string;
+  slideLabel: string;
+  slides: readonly CarouselSlide[];
+  streamIds: readonly string[];
+  defaultId: string;
+};
+
+export default function StreamCarousel({
+  heading,
+  slideLabel,
+  slides,
+  streamIds,
+  defaultId,
+}: StreamCarouselProps) {
+  const activeStream = useActiveStream(streamIds, defaultId);
+  const visibleSlides = slides.filter((slide) =>
+    isVisible(slide.streams, activeStream),
+  );
+  const [api, setApi] = useState<CarouselApi>();
+  const activeIndex = useCarouselIndex(api, activeStream);
+
+  if (visibleSlides.length === 0) {
     return null;
   }
 
   return (
     <>
-      <h2 className="text-xl font-semibold text-foreground">Pillars</h2>
+      <h2 className="text-xl font-semibold text-foreground">{heading}</h2>
       <Carousel
         key={activeStream}
         setApi={setApi}
-        aria-label="Career pillars"
+        aria-label={heading}
         className="w-full"
       >
         <CarouselContent>
-          {slides.map((slide) => (
+          {visibleSlides.map((slide) => (
             <CarouselItem key={slide.id}>
               <div className="flex min-h-44 flex-col justify-center gap-3 rounded-lg border bg-card p-6 text-card-foreground sm:min-h-52">
-                <h3 className="text-lg font-semibold">{slide.label}</h3>
-                <p className="text-muted-foreground">{slide.sentence}</p>
+                {slide.title ? (
+                  <h3 className="text-lg font-semibold">{slide.title}</h3>
+                ) : null}
+                <p className="text-muted-foreground">{slide.body}</p>
               </div>
             </CarouselItem>
           ))}
@@ -72,11 +95,11 @@ export default function PillarsCarousel({
         <CarouselNext />
         {/* Counted from the slides, not the carousel api, so indicators exist before it initializes. */}
         <div className="mt-4 flex justify-center gap-2">
-          {slides.map((slide, index) => (
+          {visibleSlides.map((slide, index) => (
             <button
               key={slide.id}
               type="button"
-              aria-label={`Go to pillar ${index + 1}`}
+              aria-label={`Go to ${slideLabel} ${index + 1}`}
               aria-current={activeIndex === index ? "true" : undefined}
               onClick={() => api?.scrollTo(index)}
               className="size-2.5 rounded-full bg-muted-foreground/40 aria-[current=true]:bg-primary"

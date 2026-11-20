@@ -97,6 +97,22 @@ const SUMMARY: SummaryVariant = {
   text: "Example summary one.",
 };
 
+const SUMMARIES: SummaryVariant[] = [
+  SUMMARY,
+  {
+    id: "example-summary-two",
+    tags: [],
+    streams: ["stream-one"],
+    text: "Example summary two.",
+  },
+  {
+    id: "example-summary-three",
+    tags: [],
+    streams: ["stream-two"],
+    text: "Example summary three.",
+  },
+];
+
 describe("experienceToEntries", () => {
   it("uses the title as the entry title", () => {
     const [entry] = experienceToEntries([EXPERIENCE], LOOKUP);
@@ -226,10 +242,29 @@ describe("stream mapping", () => {
 });
 
 describe("summariesToVariants", () => {
-  it("keeps summary streams and the text", () => {
+  it("preserves each record's id, text, and canonical streams", () => {
     expect(summariesToVariants([SUMMARY], LOOKUP)).toEqual([
-      { text: "Example summary one.", streams: ["stream-two"] },
+      {
+        id: "example-summary-one",
+        text: "Example summary one.",
+        streams: ["stream-two"],
+      },
     ]);
+  });
+
+  it("preserves summary ids in source order across multiple records", () => {
+    const variants = summariesToVariants(SUMMARIES, LOOKUP);
+
+    expect(variants.map((variant) => variant.id)).toEqual(
+      SUMMARIES.map((record) => record.id),
+    );
+    expect(variants).toHaveLength(SUMMARIES.length);
+  });
+
+  it("names the stream and record id when a summary stream is unknown", () => {
+    expect(() =>
+      summariesToVariants([{ ...SUMMARY, streams: ["nope"] }], LOOKUP),
+    ).toThrow(/Unknown stream "nope"\. on record "example-summary-one"\./);
   });
 });
 

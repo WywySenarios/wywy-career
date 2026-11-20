@@ -2,11 +2,10 @@
 import { getCollection } from "astro:content";
 import ContactDetails from "@/components/ContactDetails.astro";
 import EntryList from "@/components/EntryList.astro";
-import PillarsCarousel from "@/components/PillarsCarousel";
 import SkillGroups from "@/components/SkillGroups.astro";
+import StreamCarousel from "@/components/StreamCarousel";
 import StreamSection from "@/components/StreamSection.astro";
 import StreamSwitcher from "@/components/StreamSwitcher";
-import SummaryVariants from "@/components/SummaryVariants.astro";
 import Layout from "@/layouts/Layout.astro";
 import {
   educationToEntries,
@@ -98,20 +97,32 @@ const pillars = pillarsToSlides(cvPillarRecords, lookup);
       client:load
     />
 
-    <PillarsCarousel
-      pillars={pillars}
+    <StreamCarousel
+      heading="Pillars"
+      slideLabel="pillar"
+      slides={pillars.map(({ id, label, sentence, streams }) => ({
+        id,
+        title: label,
+        body: sentence,
+        streams,
+      }))}
       streamIds={orderedCatalog.map(({ id }) => id)}
       defaultId={initialStreamId}
       client:load
     />
 
-    <StreamSection
+    <StreamCarousel
       heading="Summary"
-      atoms={summaries}
-      activeStream={initialStreamId}
-    >
-      <SummaryVariants variants={summaries} activeStream={initialStreamId} />
-    </StreamSection>
+      slideLabel="summary"
+      slides={summaries.map(({ id, text, streams }) => ({
+        id,
+        body: text,
+        streams,
+      }))}
+      streamIds={orderedCatalog.map(({ id }) => id)}
+      defaultId={initialStreamId}
+      client:load
+    />
 
     <StreamSection
       heading="Experience"

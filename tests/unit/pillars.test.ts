@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Pillar } from "@/lib/pillars-schema";
-import { pillarsToSlides, visiblePillars } from "@/lib/pillars";
-import type { PillarSlide } from "@/lib/pillars";
+import { pillarsToSlides } from "@/lib/pillars";
 import { buildLookup } from "@/lib/streams";
 
 const CATALOG = [
@@ -88,38 +87,5 @@ describe("pillarsToSlides", () => {
     expect(() => pillarsToSlides([record], buildLookup(CATALOG))).toThrow(
       /Unknown stream "nope"\. on record "unknown-record"\./,
     );
-  });
-});
-
-function slide(
-  overrides: Partial<PillarSlide> & Pick<PillarSlide, "id">,
-): PillarSlide {
-  return {
-    label: overrides.id,
-    sentence: `${overrides.id} sentence.`,
-    order: 0,
-    streams: ["embedded"],
-    ...overrides,
-  };
-}
-
-describe("visiblePillars", () => {
-  it("returns the slides listing the active stream in sorted order", () => {
-    const slides = [
-      slide({ id: "zulu", order: 0, streams: ["embedded"] }),
-      slide({ id: "mike", order: 1, streams: ["operations", "embedded"] }),
-      slide({ id: "alpha", order: 2, streams: ["embedded"] }),
-      slide({ id: "hotel", order: 3, streams: ["full-stack"] }),
-    ];
-
-    const visible = visiblePillars(slides, "embedded");
-
-    expect(visible.map((entry) => entry.id)).toEqual(["zulu", "mike", "alpha"]);
-  });
-
-  it("returns an empty list when no slide lists the active stream", () => {
-    const slides = [slide({ id: "zulu", order: 0, streams: ["embedded"] })];
-
-    expect(visiblePillars(slides, "misc")).toEqual([]);
   });
 });

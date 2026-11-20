@@ -1,5 +1,11 @@
-import type { Dateish, Education, Experience, Project } from "@/lib/cv-schemas";
-import { canonicalizeStreams } from "@/lib/streams";
+import type {
+  Dateish,
+  Education,
+  Experience,
+  Project,
+  SummaryVariant,
+} from "@/lib/cv-schemas";
+import { canonicalizeRecordStreams, canonicalizeStreams } from "@/lib/streams";
 
 export type CvBullet = {
   text: string;
@@ -16,7 +22,8 @@ export type CvEntry = {
   bullets: CvBullet[];
 };
 
-export type SummaryEntry = {
+type SummaryEntry = {
+  id: string;
   text: string;
   streams: string[];
 };
@@ -82,8 +89,12 @@ export function educationToEntries(
 }
 
 export function summariesToVariants(
-  records: readonly { text: string; streams: readonly string[] }[],
+  records: readonly SummaryVariant[],
   lookup: StreamLookup,
 ): SummaryEntry[] {
-  return mapTextStreams(records, lookup);
+  return records.map((record) => ({
+    id: record.id,
+    text: record.text,
+    streams: canonicalizeRecordStreams(record, lookup),
+  }));
 }

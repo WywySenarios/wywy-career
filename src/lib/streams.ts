@@ -47,6 +47,18 @@ export function canonicalizeStreams(
   });
 }
 
+export function canonicalizeRecordStreams(
+  record: StreamBearers,
+  lookup: ReadonlyMap<string, string>,
+): string[] {
+  try {
+    return canonicalizeStreams(record.streams, lookup);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`${message} on record "${record.id}".`);
+  }
+}
+
 type OrderedEntry = {
   id: string;
   order: number;
@@ -90,12 +102,7 @@ export function assertKnownStreams(
 
   for (const container of containers) {
     for (const record of recordsOf(container)) {
-      try {
-        canonicalizeStreams(record.streams, lookup);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        throw new Error(`${message} on record "${record.id}".`);
-      }
+      canonicalizeRecordStreams(record, lookup);
     }
   }
 }

@@ -1,7 +1,20 @@
 ---
-import CvPage from "@/components/CvPage.astro";
+import heroImage from "@/assets/daily-data-3.svg";
+import Hero from "@/components/Hero.astro";
+import Layout from "@/layouts/Layout.astro";
 
 export const prerender = true;
 ---
 
-<CvPage />
+<Layout title="Eric Zhu">
+  <main>
+    <Hero image={heroImage}>
+      <h2 class="text-4xl">Welcome to Eric's digital garden.</h2>
+    </Hero>
+    <div class="mx-auto text-center max-w-2xl space-y-6 px-6 py-12">
+      <a href="streams/full-stack" class="underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+        <p>This website displays data straight from my resume datasources.</p>
+      </a>
+    </div>
+  </main>
+</Layout>

@@ -1,0 +1,56 @@
+---
+import { Image } from "astro:assets";
+
+interface Props {
+  image: ImageMetadata;
+  alt?: string;
+  class?: string;
+}
+
+const { image, alt = "", class: className } = Astro.props;
+---
+
+<section
+  data-hero
+  class:list={[
+    "relative flex min-h-svh w-full items-center justify-center overflow-hidden",
+    className,
+  ]}
+>
+  <Image
+    src={image}
+    alt={alt}
+    widths={[640, 960, 1280, 1920]}
+    sizes="100vw"
+    loading="eager"
+    fetchpriority="high"
+    decoding="async"
+    data-hero-image
+    class="absolute inset-0 size-full object-cover"
+  />
+  <div
+    data-hero-overlay
+    aria-hidden="true"
+    class="absolute inset-0 bg-black/40"
+  >
+  </div>
+  <div
+    data-hero-content
+    class="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center px-6 py-24 text-center text-white"
+  >
+    <slot />
+  </div>
+</section>
+
+<style>
+  /* Dissolve the dark hero background into the page background at the bottom edge. */
+  [data-hero-overlay] {
+    background-image: linear-gradient(
+      to bottom,
+      rgb(0 0 0 / 0.3) 0%,
+      transparent 35%,
+      transparent 60%,
+      var(--background) 100%
+    );
+  }
+</style>

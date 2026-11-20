@@ -16,6 +16,9 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
+const NAME_LINK_INTERACTION_CLASSES =
+  "underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+
 export type TopBarLink = {
   label: string;
   url: string;
@@ -117,7 +120,11 @@ export default function TopBar({
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur">
       <div className="mx-auto flex max-w-2xl items-center justify-between gap-4 px-6 py-3">
-        <h1 className="text-lg font-semibold text-foreground">{name}</h1>
+        <h1 className="text-lg font-semibold text-foreground">
+          <a href="/" className={NAME_LINK_INTERACTION_CLASSES}>
+            {name}
+          </a>
+        </h1>
         <div className="hidden items-center gap-2 md:flex">
           <ProfileLinks links={links} />
           <CareerStreamMenu items={streamItems} />
@@ -136,7 +143,12 @@ export default function TopBar({
           <SheetContent side="right">
             <SheetHeader>
               <SheetTitle>Menu</SheetTitle>
-              <p className="text-sm text-muted-foreground">{name}</p>
+              <a
+                href="/"
+                className={`text-sm text-muted-foreground ${NAME_LINK_INTERACTION_CLASSES}`}
+              >
+                {name}
+              </a>
             </SheetHeader>
             <div className="flex flex-col gap-6 px-4 pb-4">
               <section>

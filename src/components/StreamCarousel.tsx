@@ -87,7 +87,7 @@ export default function StreamCarousel({
               aria-label={`Go to ${slideLabel} ${index + 1}`}
               aria-current={activeIndex === index ? "true" : undefined}
               onClick={() => api?.scrollTo(index)}
-              className="size-2.5 rounded-full bg-muted-foreground/40 aria-[current=true]:bg-primary"
+              className="size-2.5 rounded-full bg-muted-foreground/40 aria-current:bg-primary"
             />
           ))}
         </div>

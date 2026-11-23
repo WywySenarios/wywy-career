@@ -1,5 +1,6 @@
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { linkIcon } from "@/lib/link-icons";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -97,13 +98,41 @@ function MobileStreamNav({ items }: { items: readonly StreamItem[] }) {
   );
 }
 
+function ProfileLink({ link }: { link: TopBarLink }) {
+  const icon = linkIcon(link.url);
+  const iconOnly = icon !== undefined;
+
+  return (
+    <Button asChild variant="outline" size={iconOnly ? "icon-sm" : "sm"}>
+      <a
+        href={link.url}
+        aria-label={iconOnly ? link.label : undefined}
+        title={iconOnly ? link.label : undefined}
+      >
+        {icon === undefined ? (
+          link.label
+        ) : (
+          <img
+            src={icon}
+            alt=""
+            aria-hidden="true"
+            width={16}
+            height={16}
+            loading="eager"
+            decoding="async"
+            className="size-4"
+          />
+        )}
+      </a>
+    </Button>
+  );
+}
+
 function ProfileLinks({ links }: { links: readonly TopBarLink[] }) {
   return (
     <>
       {links.map((link) => (
-        <Button key={link.url} asChild variant="outline" size="sm">
-          <a href={link.url}>{link.label}</a>
-        </Button>
+        <ProfileLink key={link.url} link={link} />
       ))}
     </>
   );
